@@ -1,0 +1,133 @@
+<html>
+<head>
+	<title>房屋施工建设</title>
+<link type="text/css" rel="stylesheet" href="./frappe_theme.css">
+<script src="./moment.min.js"></script>
+<script src="./snap.svg-min.js"></script>
+<script src="./frappe-gantt.min.js"></script>
+
+</head>
+<body>
+<svg id="gantt"></svg>
+
+<script type="text/javascript">
+var tasks = [
+  {
+	id: 'Task 1',
+	name: '第一层',
+	start: '2022-10-01',
+	end: '2022-10-10',
+	contract:"中建十一所",
+	changes:"tqz0001,tqz021",
+	levelName:"F1",
+	progress: 20,
+	dependencies: ''
+  },
+  {
+	id: 'Task 2',
+	name: '第二层',
+	start: '2022-10-11',
+	end: '2022-10-20',
+	contract:"中建十一所",
+	changes:"tqz0005",
+	levelName:"F2",
+	progress: 0,
+	dependencies: 'Task 1'
+  },
+  {
+	id: 'Task 3',
+	name: '第三层',
+	start: '2022-10-21',
+	end: '2022-10-31',
+	contract:"中建十一所",
+	changes:"tqz0061",
+	levelName:"F3",
+	progress: 0,
+	dependencies: 'Task 2'
+  },
+]
+var gantt = new Gantt("#gantt", tasks,{
+		on_click: function (task) {
+			console.log(task);
+			isolateComponents(task.levelName);
+		},
+		//can be a function that returns html
+		//or a simple html string
+		custom_popup_html: function(task) {
+		  // the task object will contain the updated
+		  // dates and progress value
+		  const end_date = task._end.format('MMM D');
+		  return `
+			<div class="details-container">
+			  <h5>${task.name}</h5>
+			  <p>供应商：${task.contract}</p>
+			  <p>变更签证:<a href='./change_example.png' target="_blank">${task.changes}</a></p>
+			  <p>进度：${task.progress}% 已完成</p>
+			</div>
+		  `;
+		}
+	});
+gantt.change_view_mode('Week');
+
+</script>
+	<div id="domId" style="width:1400px; height:600px;margin-left: 200px;"></div>
+
+    <script src="https://static.bimface.com/api/BimfaceSDKLoader/BimfaceSDKLoader@latest-release.js" charset="utf-8"></script>
+    <script>
+        //在这里输入BIMFACE JavaScript SDK提供的方法
+        let viewer3D;
+		let app;
+		let viewToken = 'c5bcce8a2f474352aa03c600d749028a';
+		//创建BimfaceSDKLoaderConfig
+		let loaderConfig = new BimfaceSDKLoaderConfig();
+		//设置BimfaceSDKLoaderConfig的viewToken
+		loaderConfig.viewToken = viewToken;
+		//调用BimfaceSDKLoader的load方法加载模型
+		BimfaceSDKLoader.load(loaderConfig, successCallback, failureCallback);
+
+		//加载成功回调函数
+		function successCallback(viewMetaData) {
+		    //获取DOM元素
+		    let domShow = document.getElementById('domId');
+		    //创建WebApplication3DConfig
+		    let webAppConfig = new Glodon.Bimface.Application.WebApplication3DConfig();
+		    //设置创建WebApplication3DConfig的dom元素值
+		        webAppConfig.domElement = domShow;    
+		    //创建WebApplication3D
+		    app = new Glodon.Bimface.Application.WebApplication3D(webAppConfig);    
+		    //添加待显示的模型
+		    app.addView(viewToken);
+		    //获取viewer3D对象
+		    viewer3D = app.getViewer();
+		    //获取模型信息的例子
+		    //getFloors(callback)
+		    //https://bimface.com/docs/model-viewer/v1/api-reference/Glodon.Bimface.Model.BimModel.html
+		    setTimeout(function(){
+		    	let model = viewer3D.getModel();
+		    	console.log(model);
+		    	model.getFloors(function(data){
+		    		console.log("getFloors=====");
+		    		console.log(data);
+		    		//是一个listOfObeject的模式，里面有一个属性叫name='F1',[{},{},{},{},{}]
+		    	});
+		    }, 5000);
+		};
+
+		//加载失败回调函数
+		function failureCallback(error) {
+		    console.log(error);
+		};
+		// ************************** 隔离 **************************
+		function isolateComponents(levelName) {
+		  // 设置隔离选项，指定其他构件为半透明状态
+		  let makeOthersTranslucent = Glodon.Bimface.Viewer.IsolateOption.HideOthers;
+		  // 调用viewer3D.method，隔离楼层为"F2"的构件
+		  viewer3D.getModel().isolateComponentsByObjectData([{"levelName":levelName}], makeOthersTranslucent);
+		  // 渲染三维模型
+		  viewer3D.render();
+		}
+    </script>
+
+
+</body>
+</html>
